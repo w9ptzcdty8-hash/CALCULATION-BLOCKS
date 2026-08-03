@@ -58,7 +58,7 @@
   #equationBar {
     font-size: 20px; font-weight: bold; letter-spacing: 2px;
     background: var(--panel); border-radius: 10px;
-    padding: 8px 10px; margin: 6px 0;
+    padding: 8px 10px; margin: 0;
     display: flex; align-items: center; gap: 4px;
     flex-shrink: 0; flex-wrap: nowrap;
   }
@@ -123,7 +123,22 @@
   .block.flash-success { box-shadow: 0 0 0 4px var(--success), 0 0 18px var(--success) !important; }
   .block.flash-fail { box-shadow: 0 0 0 4px var(--fail), 0 0 18px var(--fail) !important; }
 
-  #controls { display: flex; flex-direction: column; align-items: center; margin-top: 6px; flex-shrink: 0; width: 100%; }
+  #gameTopRow {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; gap: 8px; flex-shrink: 0; margin: 6px 0;
+    flex-wrap: wrap;
+  }
+  #miniControls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  button.mini-btn {
+    width: auto; max-width: none; margin: 0;
+    padding: 8px 12px; font-size: 12px; border-radius: 8px;
+    background: var(--panel);
+  }
+  button.mini-btn.icon {
+    width: 34px; height: 34px; padding: 0;
+    border-radius: 50%; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+  }
 
   #feedbackPop {
     position: fixed; top: 42%; left: 50%;
@@ -276,7 +291,7 @@
     });
     diffButtons.VERYEASY.style.outline = "2px solid var(--accent)";
 
-    const btnStart = createButton("START", "primary");
+    const btnStart = createButton("START", "primary diff-btn");
     btnStart.addEventListener("click", startGame);
 
     titleScreen.appendChild(title);
@@ -300,8 +315,27 @@
     topBar.appendChild(diffLabel);
     topBar.appendChild(scoreVal);
 
+    const gameTopRow = document.createElement("div");
+    gameTopRow.id = "gameTopRow";
+
     eqBar = document.createElement("div");
     eqBar.id = "equationBar";
+
+    const miniControls = document.createElement("div");
+    miniControls.id = "miniControls";
+    passButton = createButton("PASS", "mini-btn");
+    passButton.addEventListener("click", handlePass);
+    pauseButton = createButton("⏸", "mini-btn icon");
+    pauseButton.setAttribute("aria-label", "PAUSE");
+    pauseButton.addEventListener("click", () => {
+      state.paused = true;
+      showScreen("PAUSE");
+    });
+    miniControls.appendChild(passButton);
+    miniControls.appendChild(pauseButton);
+
+    gameTopRow.appendChild(eqBar);
+    gameTopRow.appendChild(miniControls);
 
     messageEl = document.createElement("div");
     messageEl.id = "message";
@@ -312,23 +346,10 @@
     boardEl.className = "board-box";
     boardWrap.appendChild(boardEl);
 
-    const controls = document.createElement("div");
-    controls.id = "controls";
-    passButton = createButton("PASS", "diff-btn");
-    passButton.addEventListener("click", handlePass);
-    pauseButton = createButton("PAUSE", "diff-btn");
-    pauseButton.addEventListener("click", () => {
-      state.paused = true;
-      showScreen("PAUSE");
-    });
-    controls.appendChild(passButton);
-    controls.appendChild(pauseButton);
-
     gameScreen.appendChild(topBar);
-    gameScreen.appendChild(eqBar);
+    gameScreen.appendChild(gameTopRow);
     gameScreen.appendChild(messageEl);
     gameScreen.appendChild(boardWrap);
-    gameScreen.appendChild(controls);
     root.appendChild(gameScreen);
   }
 
