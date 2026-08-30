@@ -57,7 +57,7 @@
   function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
   // ===================== DOM =====================
-  let root, titleScreen, gameScreen, pauseScreen, resultScreen;
+  let root, titleScreen, levelSelectScreen, gameScreen, pauseScreen, resultScreen;
   let boardWrap, boardEl, cellSize;
   let scoreVal, messageEl, diffLabel;
   let eqBar, slotEls, opEls, targetEl;
@@ -87,6 +87,7 @@
     root = document.getElementById("app");
     root.innerHTML = "";
     createTitleScreen();
+    createLevelSelectScreen();
     createGameScreen();
     createPauseScreen();
     createResultScreen();
@@ -127,34 +128,13 @@
     sub.style.fontSize = "12px";
     sub.style.textAlign = "center";
     sub.style.whiteSpace = "pre-line";
-    sub.innerText = "積み上がったブロックから選んで□に入れよう\n表示された答えになったら成功！";
-
-    const diffRow = document.createElement("div");
-    diffRow.style.display = "flex";
-    diffRow.style.flexDirection = "column";
-    diffRow.style.alignItems = "center";
-    diffRow.style.width = "100%";
-
-    const diffButtons = {};
-    ["VERYEASY", "EASY", "NORMAL", "HARD"].forEach((d) => {
-      const btn = createButton(DIFFICULTY_LABELS[d], "diff-btn");
-      btn.addEventListener("click", () => {
-        state.difficulty = d;
-        Object.values(diffButtons).forEach((b) => (b.style.outline = "none"));
-        btn.style.outline = "2px solid var(--accent)";
-      });
-      diffButtons[d] = btn;
-      diffRow.appendChild(btn);
-    });
-    diffButtons.VERYEASY.style.outline = "2px solid var(--accent)";
+    sub.innerText = "数字を選び、計算式を完成させろ！";
 
     const btnStart = createButton("START", "primary diff-btn");
-    btnStart.addEventListener("click", startGame);
+    btnStart.addEventListener("click", () => showScreen("LEVELSELECT"));
 
-    const highScoreLink = document.createElement("button");
-    highScoreLink.innerText = "ハイスコアを見る";
-    highScoreLink.className = "link-btn";
-    highScoreLink.addEventListener("click", () => showScreen("HIGHSCORES"));
+    const highScoreBtn = createButton("ハイスコア", "diff-btn");
+    highScoreBtn.addEventListener("click", () => showScreen("HIGHSCORES"));
 
     const mrsGamesLink = document.createElement("a");
     mrsGamesLink.innerText = "MRS GAMES";
@@ -165,11 +145,43 @@
 
     titleScreen.appendChild(title);
     titleScreen.appendChild(sub);
-    titleScreen.appendChild(diffRow);
     titleScreen.appendChild(btnStart);
-    titleScreen.appendChild(highScoreLink);
+    titleScreen.appendChild(highScoreBtn);
     titleScreen.appendChild(mrsGamesLink);
     root.appendChild(titleScreen);
+  }
+
+  function createLevelSelectScreen() {
+    levelSelectScreen = document.createElement("div");
+    levelSelectScreen.className = "screen";
+    levelSelectScreen.style.justifyContent = "center";
+    levelSelectScreen.style.display = "none";
+
+    const h = document.createElement("h2");
+    h.innerText = "レベルを選択";
+
+    const diffRow = document.createElement("div");
+    diffRow.style.display = "flex";
+    diffRow.style.flexDirection = "column";
+    diffRow.style.alignItems = "center";
+    diffRow.style.width = "100%";
+
+    ["VERYEASY", "EASY", "NORMAL", "HARD"].forEach((d) => {
+      const btn = createButton(DIFFICULTY_LABELS[d], "diff-btn");
+      btn.addEventListener("click", () => {
+        state.difficulty = d;
+        startGame();
+      });
+      diffRow.appendChild(btn);
+    });
+
+    const backBtn = createButton("タイトルへ戻る", "primary");
+    backBtn.addEventListener("click", () => showScreen("TITLE"));
+
+    levelSelectScreen.appendChild(h);
+    levelSelectScreen.appendChild(diffRow);
+    levelSelectScreen.appendChild(backBtn);
+    root.appendChild(levelSelectScreen);
   }
 
   function createHighScoreScreen() {
@@ -440,11 +452,12 @@
   }
 
   function showScreen(name) {
-    [titleScreen, gameScreen, pauseScreen, resultScreen, boardViewScreen, reviewScreen, highScoreScreen].forEach(
+    [titleScreen, levelSelectScreen, gameScreen, pauseScreen, resultScreen, boardViewScreen, reviewScreen, highScoreScreen].forEach(
       (s) => (s.style.display = "none")
     );
     switch (name) {
       case "TITLE": titleScreen.style.display = "flex"; break;
+      case "LEVELSELECT": levelSelectScreen.style.display = "flex"; break;
       case "GAME": gameScreen.style.display = "flex"; break;
       case "PAUSE": pauseScreen.style.display = "flex"; break;
       case "RESULT": resultScreen.style.display = "flex"; break;
