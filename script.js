@@ -110,6 +110,13 @@
     return b;
   }
 
+  // プレイ画面の数字ブロックと同じ配色をボタンに適用する
+  function colorizeButton(btn, colorIndex) {
+    const c = BLOCK_COLORS[colorIndex % 10];
+    btn.style.background = c.bg;
+    btn.style.color = c.fg;
+  }
+
   // ボタン押下時に点滅演出を挟んでから画面遷移などの処理を実行する
   function pressThen(btn, callback, delay = 500) {
     btn.disabled = true;
@@ -135,8 +142,10 @@
     const btnRow = document.createElement("div");
     btnRow.className = "confirm-btn-row";
 
-    confirmYesBtn = createButton("はい", "primary");
+    confirmYesBtn = createButton("はい");
+    colorizeButton(confirmYesBtn, 5);
     confirmNoBtn = createButton("いいえ");
+    colorizeButton(confirmNoBtn, 0);
 
     btnRow.appendChild(confirmYesBtn);
     btnRow.appendChild(confirmNoBtn);
@@ -185,10 +194,12 @@
     sub.style.whiteSpace = "pre-line";
     sub.innerText = "数字を選び、計算式を完成させろ！";
 
-    const btnStart = createButton("START", "primary diff-btn");
+    const btnStart = createButton("START", "diff-btn");
+    colorizeButton(btnStart, 5);
     btnStart.addEventListener("click", () => pressThen(btnStart, () => showScreen("LEVELSELECT")));
 
     const highScoreBtn = createButton("ハイスコア", "diff-btn");
+    colorizeButton(highScoreBtn, 6);
     highScoreBtn.addEventListener("click", () => pressThen(highScoreBtn, () => showScreen("HIGHSCORES")));
 
     const mrsGamesLink = document.createElement("a");
@@ -221,8 +232,10 @@
     diffRow.style.alignItems = "center";
     diffRow.style.width = "100%";
 
+    const levelColorMap = { VERYEASY: 4, EASY: 3, NORMAL: 2, HARD: 1 };
     ["VERYEASY", "EASY", "NORMAL", "HARD"].forEach((d) => {
       const btn = createButton(DIFFICULTY_LABELS[d], "diff-btn");
+      colorizeButton(btn, levelColorMap[d]);
       btn.addEventListener("click", () => {
         pressThen(btn, () => {
           state.difficulty = d;
@@ -232,7 +245,8 @@
       diffRow.appendChild(btn);
     });
 
-    const backBtn = createButton("タイトルへ戻る", "primary");
+    const backBtn = createButton("タイトルへ戻る");
+    colorizeButton(backBtn, 7);
     backBtn.addEventListener("click", () => pressThen(backBtn, () => showScreen("TITLE")));
 
     levelSelectScreen.appendChild(h);
@@ -253,7 +267,8 @@
     highScoreList.className = "review-list";
     highScoreList.style.marginTop = "6px";
 
-    const backBtn = createButton("タイトルへ戻る", "primary");
+    const backBtn = createButton("タイトルへ戻る");
+    colorizeButton(backBtn, 8);
     backBtn.style.marginTop = "14px";
     backBtn.addEventListener("click", () => pressThen(backBtn, () => showScreen("TITLE")));
 

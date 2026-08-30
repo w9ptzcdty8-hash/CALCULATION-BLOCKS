@@ -231,8 +231,8 @@
     animation: btnFlash 0.2s ease-in-out infinite;
   }
   @keyframes btnFlash {
-    0%, 100% { box-shadow: none; }
-    50% { box-shadow: 0 0 0 3px var(--accent) inset, 0 0 10px 2px var(--accent); }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
   }
 
   /* ---------------- 確認モーダル（タイトルに戻りますか？等） ---------------- */
