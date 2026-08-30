@@ -89,11 +89,6 @@
   button.primary { background: var(--accent); color: #14171f; font-weight: bold; }
   button.primary:hover:not(:disabled) { background: #ffc472; }
   button.diff-btn { width: 78%; max-width: 320px; white-space: nowrap; font-size: 15px; padding: 12px 8px; }
-  button.link-btn {
-    width: auto; max-width: none; background: none; border: none;
-    color: var(--accent2); text-decoration: underline; font-size: 13px;
-    padding: 6px; margin-top: 4px;
-  }
   .mrs-games-link {
     display: inline-block;
     margin-top: 10px;
