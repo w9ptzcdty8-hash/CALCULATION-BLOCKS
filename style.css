@@ -228,11 +228,11 @@
 
   /* ---------------- ボタン押下の点滅演出 ---------------- */
   button.btn-flash {
-    animation: btnFlash 0.35s ease-in-out infinite;
+    animation: btnFlash 0.2s ease-in-out infinite;
   }
   @keyframes btnFlash {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
+    0%, 100% { box-shadow: none; }
+    50% { box-shadow: 0 0 0 3px var(--accent) inset, 0 0 10px 2px var(--accent); }
   }
 
   /* ---------------- 確認モーダル（タイトルに戻りますか？等） ---------------- */

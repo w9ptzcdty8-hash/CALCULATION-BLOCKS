@@ -111,7 +111,7 @@
   }
 
   // ボタン押下時に点滅演出を挟んでから画面遷移などの処理を実行する
-  function pressThen(btn, callback, delay = 1000) {
+  function pressThen(btn, callback, delay = 500) {
     btn.disabled = true;
     btn.classList.add("btn-flash");
     setTimeout(() => {
@@ -361,18 +361,14 @@
     h.innerText = "PAUSE";
     const resumeBtn = createButton("RESUME", "primary");
     resumeBtn.addEventListener("click", () => {
-      pressThen(resumeBtn, () => {
-        state.paused = false;
-        showScreen("GAME");
-      });
+      state.paused = false;
+      showScreen("GAME");
     });
     const titleBtn = createButton("TITLE");
     titleBtn.addEventListener("click", () => {
-      pressThen(titleBtn, () => {
-        showConfirmModal("タイトルに戻りますか？", () => {
-          stopTimers();
-          showScreen("TITLE");
-        });
+      showConfirmModal("タイトルに戻りますか？", () => {
+        stopTimers();
+        showScreen("TITLE");
       });
     });
     pauseScreen.appendChild(h);
