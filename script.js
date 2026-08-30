@@ -68,6 +68,7 @@
   let reviewScreen, reviewPassList, reviewMissList;
   let highScoreScreen, highScoreList;
   let nextBoxes;
+  let confirmModal, confirmTextEl, confirmYesBtn, confirmNoBtn;
 
   const STAGE_W = 375;
   const STAGE_H = 667; // 9:16 (16:9のポートレート版) 固定デザイン解像度
@@ -95,6 +96,7 @@
     createReviewScreen();
     createHighScoreScreen();
     createFeedbackPop();
+    createConfirmModal();
     showScreen("TITLE");
     updateStageScale();
     window.addEventListener("resize", () => { updateStageScale(); layoutBoard(); });
@@ -106,6 +108,59 @@
     b.innerText = label;
     if (cls) b.className = cls;
     return b;
+  }
+
+  // ボタン押下時に点滅演出を挟んでから画面遷移などの処理を実行する
+  function pressThen(btn, callback, delay = 1000) {
+    btn.disabled = true;
+    btn.classList.add("btn-flash");
+    setTimeout(() => {
+      btn.classList.remove("btn-flash");
+      btn.disabled = false;
+      callback();
+    }, delay);
+  }
+
+  function createConfirmModal() {
+    confirmModal = document.createElement("div");
+    confirmModal.className = "confirm-modal";
+    confirmModal.style.display = "none";
+
+    const panel = document.createElement("div");
+    panel.className = "confirm-panel";
+
+    confirmTextEl = document.createElement("div");
+    confirmTextEl.className = "confirm-text";
+
+    const btnRow = document.createElement("div");
+    btnRow.className = "confirm-btn-row";
+
+    confirmYesBtn = createButton("はい", "primary");
+    confirmNoBtn = createButton("いいえ");
+
+    btnRow.appendChild(confirmYesBtn);
+    btnRow.appendChild(confirmNoBtn);
+    panel.appendChild(confirmTextEl);
+    panel.appendChild(btnRow);
+    confirmModal.appendChild(panel);
+    root.appendChild(confirmModal);
+  }
+
+  function showConfirmModal(message, onYes) {
+    confirmTextEl.innerText = message;
+    confirmModal.style.display = "flex";
+
+    confirmYesBtn.onclick = () => {
+      pressThen(confirmYesBtn, () => {
+        confirmModal.style.display = "none";
+        onYes();
+      });
+    };
+    confirmNoBtn.onclick = () => {
+      pressThen(confirmNoBtn, () => {
+        confirmModal.style.display = "none";
+      });
+    };
   }
 
   function createFeedbackPop() {
@@ -131,10 +186,10 @@
     sub.innerText = "数字を選び、計算式を完成させろ！";
 
     const btnStart = createButton("START", "primary diff-btn");
-    btnStart.addEventListener("click", () => showScreen("LEVELSELECT"));
+    btnStart.addEventListener("click", () => pressThen(btnStart, () => showScreen("LEVELSELECT")));
 
     const highScoreBtn = createButton("ハイスコア", "diff-btn");
-    highScoreBtn.addEventListener("click", () => showScreen("HIGHSCORES"));
+    highScoreBtn.addEventListener("click", () => pressThen(highScoreBtn, () => showScreen("HIGHSCORES")));
 
     const mrsGamesLink = document.createElement("a");
     mrsGamesLink.innerText = "MRS GAMES";
@@ -169,14 +224,16 @@
     ["VERYEASY", "EASY", "NORMAL", "HARD"].forEach((d) => {
       const btn = createButton(DIFFICULTY_LABELS[d], "diff-btn");
       btn.addEventListener("click", () => {
-        state.difficulty = d;
-        startGame();
+        pressThen(btn, () => {
+          state.difficulty = d;
+          startGame();
+        });
       });
       diffRow.appendChild(btn);
     });
 
     const backBtn = createButton("タイトルへ戻る", "primary");
-    backBtn.addEventListener("click", () => showScreen("TITLE"));
+    backBtn.addEventListener("click", () => pressThen(backBtn, () => showScreen("TITLE")));
 
     levelSelectScreen.appendChild(h);
     levelSelectScreen.appendChild(diffRow);
@@ -198,7 +255,7 @@
 
     const backBtn = createButton("タイトルへ戻る", "primary");
     backBtn.style.marginTop = "14px";
-    backBtn.addEventListener("click", () => showScreen("TITLE"));
+    backBtn.addEventListener("click", () => pressThen(backBtn, () => showScreen("TITLE")));
 
     highScoreScreen.appendChild(h);
     highScoreScreen.appendChild(highScoreList);
@@ -304,13 +361,19 @@
     h.innerText = "PAUSE";
     const resumeBtn = createButton("RESUME", "primary");
     resumeBtn.addEventListener("click", () => {
-      state.paused = false;
-      showScreen("GAME");
+      pressThen(resumeBtn, () => {
+        state.paused = false;
+        showScreen("GAME");
+      });
     });
     const titleBtn = createButton("TITLE");
     titleBtn.addEventListener("click", () => {
-      stopTimers();
-      showScreen("TITLE");
+      pressThen(titleBtn, () => {
+        showConfirmModal("タイトルに戻りますか？", () => {
+          stopTimers();
+          showScreen("TITLE");
+        });
+      });
     });
     pauseScreen.appendChild(h);
     pauseScreen.appendChild(resumeBtn);
