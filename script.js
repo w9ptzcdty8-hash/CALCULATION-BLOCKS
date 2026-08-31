@@ -194,8 +194,10 @@
     titleScreen.className = "screen";
     titleScreen.style.justifyContent = "center";
 
-    const title = document.createElement("h1");
-    title.innerText = "四則演算ブロック";
+    const title = document.createElement("img");
+    title.src = "images/TITLE.PNG";
+    title.alt = "四則演算ブロック";
+    title.className = "title-logo";
 
     const sub = document.createElement("div");
     sub.style.color = "var(--muted)";

@@ -75,6 +75,13 @@
     position: relative;
   }
   h1 { margin: 6px 0 2px; font-size: 19px; letter-spacing: 2px; }
+  .title-logo {
+    display: block;
+    width: 82%;
+    max-width: 360px;
+    height: auto;
+    margin: 6px 0 2px;
+  }
   h2 { margin: 6px 0; color: var(--accent); }
   button {
     -webkit-appearance: none; appearance: none;
