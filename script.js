@@ -325,31 +325,31 @@
     leftCol.appendChild(diffLabel);
     leftCol.appendChild(scoreVal);
 
-    // 右上：ポーズ（上）、PASS（下）
-    const rightControls = document.createElement("div");
-    rightControls.id = "rightControls";
-
-    pauseButton = createButton("⏸", "mini-btn icon");
+    // 右上：ポーズボタン単独配置（大きめ）
+    pauseButton = createButton("⏸", "mini-btn pause-btn");
     pauseButton.setAttribute("aria-label", "PAUSE");
     pauseButton.addEventListener("click", () => {
       state.paused = true;
       showScreen("PAUSE");
     });
 
-    passButton = createButton("PASS", "mini-btn");
-    passButton.addEventListener("click", handlePass);
-
-    rightControls.appendChild(pauseButton);
-    rightControls.appendChild(passButton);
-
     topBar.appendChild(leftCol);
-    topBar.appendChild(rightControls);
+    topBar.appendChild(pauseButton);
 
-    // 数式バーエリア
+    // 数式バーとPASSボタンを横並びにするエリア
+    const eqRow = document.createElement("div");
+    eqRow.id = "eqRow";
+
     eqBar = document.createElement("div");
     eqBar.id = "equationBar";
 
-    // NEXT表示エリア（横並び：NEXTラベル + ブロック3つ）
+    passButton = createButton("PASS", "pass-btn");
+    passButton.addEventListener("click", handlePass);
+
+    eqRow.appendChild(eqBar);
+    eqRow.appendChild(passButton);
+
+    // サブバー（メッセージ＆NEXT表示エリア）
     const subBar = document.createElement("div");
     subBar.id = "subBar";
 
@@ -380,7 +380,7 @@
     boardWrap.appendChild(boardEl);
 
     gameScreen.appendChild(topBar);
-    gameScreen.appendChild(eqBar);
+    gameScreen.appendChild(eqRow);
     gameScreen.appendChild(subBar);
     gameScreen.appendChild(boardWrap);
     root.appendChild(gameScreen);
