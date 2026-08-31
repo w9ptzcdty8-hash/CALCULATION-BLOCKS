@@ -314,7 +314,7 @@
     const topBar = document.createElement("div");
     topBar.id = "topBar";
 
-    // 左側エリア：DIFFICULTY の下に SCORE
+    // 左側：DIFFICULTY（上）と SCORE（下）
     const leftCol = document.createElement("div");
     leftCol.id = "leftCol";
     diffLabel = document.createElement("div");
@@ -325,12 +325,9 @@
     leftCol.appendChild(diffLabel);
     leftCol.appendChild(scoreVal);
 
-    // 右側エリア：右上ポーズ、下にパス、NEXT表示
-    const rightCol = document.createElement("div");
-    rightCol.id = "rightCol";
-
-    const btnRow = document.createElement("div");
-    btnRow.id = "topBtnRow";
+    // 右上：ポーズ（上）、PASS（下）
+    const rightControls = document.createElement("div");
+    rightControls.id = "rightControls";
 
     pauseButton = createButton("⏸", "mini-btn icon");
     pauseButton.setAttribute("aria-label", "PAUSE");
@@ -342,8 +339,22 @@
     passButton = createButton("PASS", "mini-btn");
     passButton.addEventListener("click", handlePass);
 
-    btnRow.appendChild(pauseButton);
-    btnRow.appendChild(passButton);
+    rightControls.appendChild(pauseButton);
+    rightControls.appendChild(passButton);
+
+    topBar.appendChild(leftCol);
+    topBar.appendChild(rightControls);
+
+    // 数式バーエリア
+    eqBar = document.createElement("div");
+    eqBar.id = "equationBar";
+
+    // NEXT表示エリア（横並び：NEXTラベル + ブロック3つ）
+    const subBar = document.createElement("div");
+    subBar.id = "subBar";
+
+    messageEl = document.createElement("div");
+    messageEl.id = "message";
 
     const nextSection = document.createElement("div");
     nextSection.id = "nextSection";
@@ -351,28 +362,16 @@
     nextLabel.innerText = "NEXT";
     nextSection.appendChild(nextLabel);
 
-    const nextBoxRow = document.createElement("div");
-    nextBoxRow.id = "nextBoxRow";
     nextBoxes = [];
     for (let i = 0; i < 3; i++) {
       const box = document.createElement("div");
       box.className = "next-box";
-      nextBoxRow.appendChild(box);
+      nextSection.appendChild(box);
       nextBoxes.push(box);
     }
-    nextSection.appendChild(nextBoxRow);
 
-    rightCol.appendChild(btnRow);
-    rightCol.appendChild(nextSection);
-
-    topBar.appendChild(leftCol);
-    topBar.appendChild(rightCol);
-
-    eqBar = document.createElement("div");
-    eqBar.id = "equationBar";
-
-    messageEl = document.createElement("div");
-    messageEl.id = "message";
+    subBar.appendChild(messageEl);
+    subBar.appendChild(nextSection);
 
     boardWrap = document.createElement("div");
     boardWrap.className = "board-area";
@@ -382,7 +381,7 @@
 
     gameScreen.appendChild(topBar);
     gameScreen.appendChild(eqBar);
-    gameScreen.appendChild(messageEl);
+    gameScreen.appendChild(subBar);
     gameScreen.appendChild(boardWrap);
     root.appendChild(gameScreen);
   }
@@ -657,7 +656,6 @@
       if (inner === null) return null;
       return applyOp(inner, values[2], ops[1]);
     }
-    // flat3-prec: ×÷を優先して計算
     const nums = values.slice();
     const opers = ops.slice();
     for (let i = 0; i < opers.length; i++) {

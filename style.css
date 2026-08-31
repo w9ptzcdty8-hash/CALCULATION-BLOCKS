@@ -68,7 +68,7 @@
     height: 100%;
     display: flex; flex-direction: column;
     align-items: center;
-    padding: 10px 12px;
+    padding: 8px 12px;
     position: relative;
   }
   h1 { margin: 6px 0 2px; font-size: 19px; letter-spacing: 2px; }
@@ -114,92 +114,92 @@
 
   .screen { display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; }
 
-  /* ---------------- トップバー（左：難易度/スコア、右：ボタン・NEXT） ---------------- */
+  /* ---------------- トップバー（左：難易度・スコア、右上：ポーズ・パス） ---------------- */
   #topBar {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     width: 100%;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     flex-shrink: 0;
   }
 
   #leftCol {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    font-size: 13px;
-    color: var(--muted);
-  }
-  #scoreVal { color: var(--text); font-weight: bold; font-size: 18px; }
-
-  #rightCol {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-  }
-
-  #topBtnRow {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  #nextSection {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
     gap: 2px;
-    font-size: 10px;
+    font-size: 12px;
     color: var(--muted);
-    letter-spacing: 1px;
   }
-  #nextBoxRow {
+  #scoreVal { color: var(--text); font-weight: bold; font-size: 16px; }
+
+  #rightControls {
     display: flex;
-    gap: 3px;
-  }
-  .next-box {
-    width: 20px; height: 20px; border-radius: 5px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: bold;
-    background: #2a3142; color: var(--text);
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
   }
 
   button.mini-btn {
     width: auto; max-width: none; margin: 0;
-    padding: 6px 12px; font-size: 12px; border-radius: 8px;
+    padding: 5px 10px; font-size: 11px; border-radius: 6px;
     background: var(--panel);
   }
   button.mini-btn.icon {
-    width: 32px; height: 32px; padding: 0;
-    border-radius: 50%; font-size: 15px;
+    width: 28px; height: 28px; padding: 0;
+    border-radius: 50%; font-size: 14px;
     display: flex; align-items: center; justify-content: center;
   }
 
-  /* ---------------- 数式エリア（大幅拡大） ---------------- */
+  /* ---------------- 数式バーエリア（大きく表示） ---------------- */
   #equationBar {
     width: 100%;
-    font-size: 22px; font-weight: bold; letter-spacing: 1px;
-    background: var(--panel); border-radius: 12px;
-    padding: 10px 8px; margin: 2px 0 6px;
-    display: flex; align-items: center; justify-content: center; gap: 4px;
+    font-size: 19px; font-weight: bold; letter-spacing: 1px;
+    background: var(--panel); border-radius: 10px;
+    padding: 8px 6px; margin: 2px 0 4px;
+    display: flex; align-items: center; justify-content: center; gap: 3px;
     flex-shrink: 0; flex-wrap: nowrap;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
   }
   .slot {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 36px; height: 36px; border-radius: 8px;
+    width: 30px; height: 30px; border-radius: 7px;
     background: #12151d; border: 2px dashed var(--muted);
-    font-size: 20px; flex-shrink: 0;
+    font-size: 17px; flex-shrink: 0;
   }
   .slot.filled { border-style: solid; border-color: var(--accent); color: var(--accent); }
-  .opsign { color: var(--accent2); font-size: 22px; flex-shrink: 0; }
-  .paren { color: var(--muted); font-size: 24px; font-weight: normal; flex-shrink: 0; }
-  .eqsign { margin-left: 2px; font-size: 22px; flex-shrink: 0; }
-  .targetVal { color: var(--success); font-size: 24px; margin-left: 2px; flex-shrink: 0; }
+  .opsign { color: var(--accent2); font-size: 18px; flex-shrink: 0; }
+  .paren { color: var(--muted); font-size: 20px; font-weight: normal; flex-shrink: 0; }
+  .eqsign { margin-left: 1px; font-size: 18px; flex-shrink: 0; }
+  .targetVal { color: var(--success); font-size: 20px; margin-left: 1px; flex-shrink: 0; }
 
-  #message { min-height: 14px; font-size: 12px; color: var(--accent2); margin-bottom: 2px; text-align: center; flex-shrink: 0; }
+  /* ---------------- サブバー（メッセージ＆NEXT表示） ---------------- */
+  #subBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 4px;
+    flex-shrink: 0;
+  }
+
+  #message { min-height: 14px; font-size: 12px; color: var(--accent2); margin: 0; text-align: left; flex-shrink: 1; }
+
+  #nextSection {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+  .next-box {
+    width: 18px; height: 18px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: bold;
+    background: #2a3142; color: var(--text);
+  }
 
   .board-area {
     flex: 1 1 auto;
