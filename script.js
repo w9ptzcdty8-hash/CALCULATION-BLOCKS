@@ -13,7 +13,6 @@
     HARD:     { operandCount: 3, operators: ["+", "－", "×", "÷"], structure: "paren-right" },
   };
 
-  // HARDモードでは毎ラウンド、この3パターンから均等ランダムで数式構造を選ぶ
   const HARD_STRUCTURES = ["flat3-prec", "paren-left", "paren-right"];
 
   function pickStructure(cfg) {
@@ -41,6 +40,7 @@
     7: { bg: "#577590", fg: "#ffffff" },
     8: { bg: "#9b5de5", fg: "#ffffff" },
     9: { bg: "#f15bb5", fg: "#2a0026" },
+    "?": { bg: "#7209b7", fg: "#ffd166" },
   };
 
   function highScoreKey(diff) { return "puzzle_high_score_" + diff; }
@@ -60,6 +60,7 @@
     nextQueue: [],
     paused: false,
     spawnTimer: null,
+    messageTimer: null,
     running: false,
     nextId: 1,
   };
@@ -82,7 +83,7 @@
   let confirmModal, confirmTextEl, confirmYesBtn, confirmNoBtn;
 
   const STAGE_W = 375;
-  const STAGE_H = 667; // 9:16 (16:9のポートレート版) 固定デザイン解像度
+  const STAGE_H = 667;
 
   function updateStageScale() {
     const stageEl = document.getElementById("stage");
@@ -314,7 +315,6 @@
     const topBar = document.createElement("div");
     topBar.id = "topBar";
 
-    // 左側：DIFFICULTY（上）と SCORE（下）
     const leftCol = document.createElement("div");
     leftCol.id = "leftCol";
     diffLabel = document.createElement("div");
@@ -325,7 +325,6 @@
     leftCol.appendChild(diffLabel);
     leftCol.appendChild(scoreVal);
 
-    // 右上：ポーズボタン単独配置（大きめ）
     pauseButton = createButton("⏸", "mini-btn pause-btn");
     pauseButton.setAttribute("aria-label", "PAUSE");
     pauseButton.addEventListener("click", () => {
@@ -336,7 +335,6 @@
     topBar.appendChild(leftCol);
     topBar.appendChild(pauseButton);
 
-    // 数式バーとPASSボタンを横並びにするエリア
     const eqRow = document.createElement("div");
     eqRow.id = "eqRow";
 
@@ -349,7 +347,6 @@
     eqRow.appendChild(eqBar);
     eqRow.appendChild(passButton);
 
-    // サブバー（メッセージ＆NEXT表示エリア）
     const subBar = document.createElement("div");
     subBar.id = "subBar";
 
@@ -468,9 +465,10 @@
       for (let i = 0; i < stack.length; i++) {
         const v = stack[i].value;
         const row = ROWS - 1 - i;
-        const colors = BLOCK_COLORS[v];
+        const colors = BLOCK_COLORS[v] || BLOCK_COLORS["?"];
         const div = document.createElement("div");
         div.className = "block landed";
+        if (v === "?") div.classList.add("question-block");
         div.style.width = size - 4 + "px";
         div.style.height = size - 4 + "px";
         div.style.left = c * size + 2 + "px";
@@ -597,21 +595,21 @@
     }
 
     if (structure === "paren-right") {
-      addSlot();          // slot0
-      addOp();             // op0
+      addSlot();
+      addOp();
       addParen("(");
-      addSlot();          // slot1
-      addOp();             // op1
-      addSlot();          // slot2
+      addSlot();
+      addOp();
+      addSlot();
       addParen(")");
     } else if (structure === "paren-left") {
       addParen("(");
-      addSlot();          // slot0
-      addOp();             // op0
-      addSlot();          // slot1
+      addSlot();
+      addOp();
+      addSlot();
       addParen(")");
-      addOp();             // op1
-      addSlot();          // slot2
+      addOp();
+      addSlot();
     } else {
       addSlot();
       addOp();
@@ -766,7 +764,7 @@
     restartSpawnTimer();
   }
 
-  function randomValue() { return Math.floor(Math.random() * 10); } // 0-9
+  function randomValue() { return Math.floor(Math.random() * 10); }
 
   function layoutBoard() {
     if (!boardWrap || gameScreen.style.display === "none") return;
@@ -809,9 +807,12 @@
       spawnBlock(Math.floor(Math.random() * COLS), value);
     }, currentSpawnInterval());
   }
+
   function stopTimers() {
     if (state.spawnTimer) clearInterval(state.spawnTimer);
+    if (state.messageTimer) clearTimeout(state.messageTimer);
     state.spawnTimer = null;
+    state.messageTimer = null;
   }
 
   function columnHeight(col) {
@@ -830,9 +831,10 @@
     }
     const v = value !== undefined ? value : randomValue();
     const landingRow = ROWS - 1 - height;
-    const colors = BLOCK_COLORS[v];
+    const colors = BLOCK_COLORS[v] || BLOCK_COLORS["?"];
     const el = document.createElement("div");
     el.className = "block";
+    if (v === "?") el.classList.add("question-block");
     el.style.width = cellSize - 4 + "px";
     el.style.height = cellSize - 4 + "px";
     el.style.left = col * cellSize + 2 + "px";
@@ -887,9 +889,14 @@
     if (state.paused || !state.running || !passButton || passButton.disabled) return;
     state.passedLog.push(buildFormulaLabel(state.equationStructure, state.operatorSeq, state.target));
     newRound();
-    setMessage("演算が変わった！");
+    setMessage("パス！ブロックが追加されました");
     passButton.disabled = true;
-    for (let c = 0; c < COLS; c++) spawnBlock(c);
+
+    // パス時: 全6列に1/2の確率で「？」ブロック生成して落下
+    for (let c = 0; c < COLS; c++) {
+      const val = Math.random() < 0.5 ? "?" : randomValue();
+      spawnBlock(c, val);
+    }
   }
 
   function renderLanded() {
@@ -899,9 +906,10 @@
       for (let i = 0; i < stack.length; i++) {
         const block = stack[i];
         const row = ROWS - 1 - i;
-        const colors = BLOCK_COLORS[block.value];
+        const colors = BLOCK_COLORS[block.value] || BLOCK_COLORS["?"];
         const el = document.createElement("div");
         el.className = "block landed";
+        if (block.value === "?") el.classList.add("question-block");
         el.dataset.id = block.id;
         el.style.width = cellSize - 4 + "px";
         el.style.height = cellSize - 4 + "px";
@@ -911,17 +919,28 @@
         el.style.background = colors.bg;
         el.style.color = colors.fg;
         el.innerText = block.value;
+
         if (state.selection.some((s) => s.id === block.id)) {
           el.classList.add("selected");
         }
-        el.addEventListener("click", () => onBlockClick(block, c));
+        el.addEventListener("click", () => onBlockClick(block, c, el));
         boardEl.appendChild(el);
       }
     }
   }
 
-  function onBlockClick(block, col) {
+  function onBlockClick(block, col, domEl) {
     if (state.paused || !state.running) return;
+
+    // 「？」ブロックは選択不可。小さく揺れて使えない演出
+    if (block.value === "?") {
+      domEl.classList.remove("shake-block");
+      void domEl.offsetWidth;
+      domEl.classList.add("shake-block");
+      setTimeout(() => domEl.classList.remove("shake-block"), 300);
+      return;
+    }
+
     const cfg = DIFFICULTY_CONFIG[state.difficulty];
     const already = state.selection.findIndex((s) => s.id === block.id);
     if (already !== -1) {
@@ -957,12 +976,25 @@
     domEls.forEach((el) => el.classList.add(success ? "flash-success" : "flash-fail"));
 
     showFeedback(success, success ? "せいかい！" : "ざんねん…");
-    if (!success) boardEl.classList.add("shake");
 
     setTimeout(() => {
-      boardEl.classList.remove("shake");
       if (success) {
+        // 消去対象の(col, index)位置を記録
+        const erasedCoords = [];
+        picks.forEach((p) => {
+          const stack = state.columns[p.col];
+          const idx = stack.findIndex((b) => b.id === p.id);
+          if (idx !== -1) {
+            erasedCoords.push({ col: p.col, rowIdx: idx });
+          }
+        });
+
+        // 正解ブロックの消去
         picks.forEach((p) => removeBlockById(p.id, p.col));
+
+        // 消去したブロックに上下左右で隣接する「？」ブロックを検索・変身
+        transformAdjacentQuestions(erasedCoords);
+
         state.score += 10;
         state.correctCount++;
         scoreVal.innerText = `SCORE: ${state.score}`;
@@ -976,11 +1008,72 @@
           state.roundMissLogged = true;
         }
         setMessage(`ざんねん… ${exprText} = ${resultText}`);
+
+        // 誤回答時: ランダムな3列に1/2の確率で「？」ブロック生成して落下
+        const colsToSpawn = pickRandomCols(3);
+        colsToSpawn.forEach((c) => {
+          const val = Math.random() < 0.5 ? "?" : randomValue();
+          spawnBlock(c, val);
+        });
       }
       state.selection = [];
       renderEquation();
       renderLanded();
     }, 320);
+  }
+
+  // 0〜COLS-1 から重複なしで n 個の列番号を選択
+  function pickRandomCols(n) {
+    const list = [];
+    for (let i = 0; i < COLS; i++) list.push(i);
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+    return list.slice(0, n);
+  }
+
+  // 接する「？」ブロックの数字変換処理
+  function transformAdjacentQuestions(erasedCoords) {
+    const adjacentQuestionIds = new Set();
+    const dirs = [
+      { dCol: 0, dRow: 1 },
+      { dCol: 0, dRow: -1 },
+      { dCol: 1, dRow: 0 },
+      { dCol: -1, dRow: 0 },
+    ];
+
+    erasedCoords.forEach((coord) => {
+      dirs.forEach((d) => {
+        const targetCol = coord.col + d.dCol;
+        const targetRow = coord.rowIdx + d.dRow;
+        if (targetCol >= 0 && targetCol < COLS) {
+          const stack = state.columns[targetCol];
+          if (targetRow >= 0 && targetRow < stack.length) {
+            const neighbor = stack[targetRow];
+            if (neighbor && neighbor.value === "?") {
+              adjacentQuestionIds.add(neighbor.id);
+            }
+          }
+        }
+      });
+    });
+
+    adjacentQuestionIds.forEach((id) => {
+      for (let c = 0; c < COLS; c++) {
+        const stack = state.columns[c];
+        const target = stack.find((b) => b.id === id);
+        if (target) {
+          target.value = randomValue();
+          // 白く光るエフェクト演出
+          const domEl = boardEl.querySelector(`.block[data-id="${id}"]`);
+          if (domEl) {
+            domEl.classList.add("flash-transform");
+          }
+          break;
+        }
+      }
+    });
   }
 
   function buildExprText(structure, values, ops) {
@@ -1023,8 +1116,15 @@
     showScreen("RESULT");
   }
 
+  // メッセージ表示（3秒後に自動消去）
   function setMessage(text) {
+    if (state.messageTimer) clearTimeout(state.messageTimer);
     messageEl.innerText = text;
+    if (text) {
+      state.messageTimer = setTimeout(() => {
+        messageEl.innerText = "";
+      }, 3000);
+    }
   }
 
   window.addEventListener("DOMContentLoaded", initUI);
