@@ -892,8 +892,9 @@
     setMessage("パス！ブロックが追加されました");
     passButton.disabled = true;
 
+    // パス時: 0.3 (30%) の確率で「？」ブロック生成して落下
     for (let c = 0; c < COLS; c++) {
-      const val = Math.random() < 0.5 ? "?" : randomValue();
+      const val = Math.random() < 0.3 ? "?" : randomValue();
       spawnBlock(c, val);
     }
   }
@@ -990,7 +991,7 @@
         // 1. 正解ブロックを配列から消去
         picks.forEach((p) => removeBlockById(p.id, p.col));
 
-        // 2. 接する「？」ブロックの対象IDと新数値を決定（データのみ）
+        // 2. 接するすべての「？」ブロックの対象IDと新数値を決定（データのみ）
         const transformTargets = findAdjacentQuestionsToTransform(erasedCoords);
 
         state.score += 10;
@@ -1003,7 +1004,7 @@
         state.selection = [];
         renderEquation();
 
-        // 3. 上のブロックが落下して位置が確定（renderLanded）した後に白発光演出を実行
+        // 3. 上のブロックが落下して位置が確定した後にすべての対象を白発光演出で開眼
         renderLanded();
         triggerQuestionTransformEffects(transformTargets);
 
@@ -1015,9 +1016,10 @@
         }
         setMessage(`ざんねん… ${exprText} = ${resultText}`);
 
+        // 誤回答時: 0.3 (30%) の確率で「？」ブロック生成して落下
         const colsToSpawn = pickRandomCols(3);
         colsToSpawn.forEach((c) => {
-          const val = Math.random() < 0.5 ? "?" : randomValue();
+          const val = Math.random() < 0.3 ? "?" : randomValue();
           spawnBlock(c, val);
         });
 
@@ -1038,7 +1040,7 @@
     return list.slice(0, n);
   }
 
-  // 接する「？」ブロックのID取得および値の確定
+  // 接するすべての「？」ブロックのID取得および値の確定
   function findAdjacentQuestionsToTransform(erasedCoords) {
     const adjacentQuestionIds = new Set();
     const dirs = [
@@ -1073,14 +1075,14 @@
           const newVal = randomValue();
           target.value = newVal;
           targets.push({ id, newVal });
-          break;
+          // breakを置かず全箇所をチェック（1列内に複数存在する場合にもすべて追加）
         }
       }
     });
     return targets;
   }
 
-  // 落下完了後に発行する0.5秒の「パーッと白く光って開眼する」視覚エフェクト
+  // 該当するすべての「？」ブロックを一括で0.5秒の白発光演出
   function triggerQuestionTransformEffects(targets) {
     if (!targets || targets.length === 0) return;
 
@@ -1089,7 +1091,6 @@
       if (domEl) {
         domEl.classList.add("flash-transform");
 
-        // 0.25秒（発光ピーク時）にテキストと色を「？」から新しい数字に書き換え
         setTimeout(() => {
           domEl.innerText = newVal;
           domEl.classList.remove("question-block");
@@ -1100,7 +1101,6 @@
           }
         }, 250);
 
-        // 0.5秒後（アニメーション完了時）にクラスを削除
         setTimeout(() => {
           domEl.classList.remove("flash-transform");
         }, 500);
