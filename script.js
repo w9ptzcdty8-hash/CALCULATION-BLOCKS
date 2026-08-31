@@ -13,6 +13,16 @@
     HARD:     { operandCount: 3, operators: ["+", "－", "×", "÷"], structure: "paren-right" },
   };
 
+  // HARDモードでは毎ラウンド、この3パターンから均等ランダムで数式構造を選ぶ
+  const HARD_STRUCTURES = ["flat3-prec", "paren-left", "paren-right"];
+
+  function pickStructure(cfg) {
+    if (state.difficulty === "HARD") {
+      return HARD_STRUCTURES[Math.floor(Math.random() * HARD_STRUCTURES.length)];
+    }
+    return cfg.structure;
+  }
+
   const DIFFICULTY_LABELS = {
     VERYEASY: "VERY EASY",
     EASY: "EASY",
@@ -42,6 +52,7 @@
     score: 0,
     columns: [],
     operatorSeq: [],
+    equationStructure: null,
     target: 0,
     selection: [],
     falling: [],
@@ -557,6 +568,7 @@
     slotEls = [];
     opEls = [];
     const cfg = DIFFICULTY_CONFIG[state.difficulty];
+    const structure = state.equationStructure || cfg.structure;
 
     function addSlot() {
       const slot = document.createElement("div");
@@ -577,7 +589,7 @@
       eqBar.appendChild(p);
     }
 
-    if (cfg.structure === "paren-right") {
+    if (structure === "paren-right") {
       addSlot();          // slot0
       addOp();             // op0
       addParen("(");
@@ -585,6 +597,14 @@
       addOp();             // op1
       addSlot();          // slot2
       addParen(")");
+    } else if (structure === "paren-left") {
+      addParen("(");
+      addSlot();          // slot0
+      addOp();             // op0
+      addSlot();          // slot1
+      addParen(")");
+      addOp();             // op1
+      addSlot();          // slot2
     } else {
       addSlot();
       addOp();
@@ -624,12 +644,17 @@
       if (inner === null) return null;
       return applyOp(values[0], inner, ops[0]);
     }
-    // flat3-prec: ×を優先して計算
+    if (structure === "paren-left") {
+      const inner = applyOp(values[0], values[1], ops[0]);
+      if (inner === null) return null;
+      return applyOp(inner, values[2], ops[1]);
+    }
+    // flat3-prec: ×÷を優先して計算
     const nums = values.slice();
     const opers = ops.slice();
     for (let i = 0; i < opers.length; i++) {
-      if (opers[i] === "×") {
-        const r = applyOp(nums[i], nums[i + 1], "×");
+      if (opers[i] === "×" || opers[i] === "÷") {
+        const r = applyOp(nums[i], nums[i + 1], opers[i]);
         if (r === null) return null;
         nums.splice(i, 2, r);
         opers.splice(i, 1);
@@ -661,13 +686,16 @@
     for (let attempt = 0; attempt < 200 && target === null; attempt++) {
       const sample = [];
       for (let i = 0; i < cfg.operandCount; i++) sample.push(Math.floor(Math.random() * 10));
-      const r = evaluateStructured(cfg.structure, sample, state.operatorSeq);
+      const r = evaluateStructured(state.equationStructure, sample, state.operatorSeq);
       if (r !== null && Number.isInteger(r) && r > 0) target = r;
     }
     state.target = target === null ? 1 : target;
   }
 
   function newRound() {
+    const cfg = DIFFICULTY_CONFIG[state.difficulty];
+    state.equationStructure = pickStructure(cfg);
+    buildEquationUI();
     rollOperators();
     generateTarget();
     state.roundWrongCount = 0;
@@ -675,9 +703,12 @@
     renderEquation();
   }
 
-  function buildFormulaLabel(cfg, ops, target) {
-    if (cfg.structure === "paren-right") {
+  function buildFormulaLabel(structure, ops, target) {
+    if (structure === "paren-right") {
       return `□ ${ops[0]} (□ ${ops[1]} □) = ${target}`;
+    }
+    if (structure === "paren-left") {
+      return `(□ ${ops[0]} □) ${ops[1]} □ = ${target}`;
     }
     let s = "□";
     for (let i = 0; i < ops.length; i++) s += ` ${ops[i]} □`;
@@ -720,7 +751,6 @@
     renderNextQueue();
 
     diffLabel.innerText = `DIFFICULTY: ${DIFFICULTY_LABELS[state.difficulty]}`;
-    buildEquationUI();
     newRound();
     scoreVal.innerText = "SCORE: 0";
     setMessage("ブロックを選んで□に入れよう");
@@ -858,8 +888,7 @@
 
   function handlePass() {
     if (state.paused || !state.running || !passButton || passButton.disabled) return;
-    const cfg = DIFFICULTY_CONFIG[state.difficulty];
-    state.passedLog.push(buildFormulaLabel(cfg, state.operatorSeq, state.target));
+    state.passedLog.push(buildFormulaLabel(state.equationStructure, state.operatorSeq, state.target));
     newRound();
     setMessage("演算が変わった！ブロックが降ってくる");
     passButton.disabled = true;
@@ -915,13 +944,14 @@
 
   function resolveSelection() {
     const cfg = DIFFICULTY_CONFIG[state.difficulty];
+    const structure = state.equationStructure;
     const picks = state.selection.slice();
     const values = picks.map((p) => p.value);
     const usedOps = state.operatorSeq.slice();
-    const rawResult = evaluateStructured(cfg.structure, values, usedOps);
+    const rawResult = evaluateStructured(structure, values, usedOps);
     const result = rawResult === null ? null : roundNum(rawResult);
     const success = result !== null && result === state.target;
-    const exprText = buildExprText(cfg, values, usedOps);
+    const exprText = buildExprText(structure, values, usedOps);
     const resultText = result === null ? "計算不可" : formatNum(result);
 
     const domEls = picks
@@ -945,7 +975,7 @@
       } else {
         state.roundWrongCount++;
         if (state.roundWrongCount >= 3 && !state.roundMissLogged) {
-          state.missedLog.push(buildFormulaLabel(cfg, usedOps, state.target));
+          state.missedLog.push(buildFormulaLabel(structure, usedOps, state.target));
           state.roundMissLogged = true;
         }
         setMessage(`ざんねん… ${exprText} = ${resultText}（目標: ${formatNum(state.target)}）`);
@@ -956,9 +986,12 @@
     }, 320);
   }
 
-  function buildExprText(cfg, values, ops) {
-    if (cfg.structure === "paren-right") {
+  function buildExprText(structure, values, ops) {
+    if (structure === "paren-right") {
       return `${values[0]} ${ops[0]} (${values[1]} ${ops[1]} ${values[2]})`;
+    }
+    if (structure === "paren-left") {
+      return `(${values[0]} ${ops[0]} ${values[1]}) ${ops[1]} ${values[2]}`;
     }
     let s = `${values[0]}`;
     for (let i = 0; i < ops.length; i++) s += ` ${ops[i]} ${values[i + 1]}`;
