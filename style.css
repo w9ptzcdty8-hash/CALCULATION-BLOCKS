@@ -50,15 +50,12 @@
   #bottomSafeArea {
     flex: 0 0 auto;
     width: 100%;
-    /* Androidの戻るボタン・ジェスチャーバーや、iOSのホームインジケーターに
-       コンテンツが被らないよう、画面最下部に余白を確保する。
-       env(safe-area-inset-bottom)が取れない端末でも最低20pxは確保する。 */
     height: max(20px, env(safe-area-inset-bottom, 0px));
     background: #000;
   }
   #stage {
     width: 375px;
-    height: 667px;   /* 9:16 (=16:9のポートレート版) 固定デザイン解像度。CSS transformでscale */
+    height: 667px;
     flex-shrink: 0;
     position: relative;
     background: var(--bg);
@@ -117,40 +114,92 @@
 
   .screen { display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; }
 
+  /* ---------------- トップバー（左：難易度/スコア、右：ボタン・NEXT） ---------------- */
+  #topBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+  }
+
+  #leftCol {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  #scoreVal { color: var(--text); font-weight: bold; font-size: 18px; }
+
+  #rightCol {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  #topBtnRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #nextSection {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+  #nextBoxRow {
+    display: flex;
+    gap: 3px;
+  }
+  .next-box {
+    width: 20px; height: 20px; border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: bold;
+    background: #2a3142; color: var(--text);
+  }
+
+  button.mini-btn {
+    width: auto; max-width: none; margin: 0;
+    padding: 6px 12px; font-size: 12px; border-radius: 8px;
+    background: var(--panel);
+  }
+  button.mini-btn.icon {
+    width: 32px; height: 32px; padding: 0;
+    border-radius: 50%; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ---------------- 数式エリア（大幅拡大） ---------------- */
   #equationBar {
-    font-size: 16px; font-weight: bold; letter-spacing: 1px;
-    background: var(--panel); border-radius: 10px;
-    padding: 6px 6px; margin: 0;
-    display: flex; align-items: center; gap: 2px;
-    flex-shrink: 1; flex-wrap: nowrap;
-    min-width: 0; overflow: hidden;
+    width: 100%;
+    font-size: 22px; font-weight: bold; letter-spacing: 1px;
+    background: var(--panel); border-radius: 12px;
+    padding: 10px 8px; margin: 2px 0 6px;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    flex-shrink: 0; flex-wrap: nowrap;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
   }
   .slot {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 26px; height: 26px; border-radius: 6px;
+    width: 36px; height: 36px; border-radius: 8px;
     background: #12151d; border: 2px dashed var(--muted);
-    font-size: 14px; flex-shrink: 0;
+    font-size: 20px; flex-shrink: 0;
   }
   .slot.filled { border-style: solid; border-color: var(--accent); color: var(--accent); }
-  .opsign { color: var(--accent2); font-size: 15px; flex-shrink: 0; }
-  .paren { color: var(--muted); font-size: 16px; font-weight: normal; flex-shrink: 0; }
-  .eqsign { margin-left: 1px; font-size: 15px; flex-shrink: 0; }
-  .targetVal { color: var(--success); font-size: 16px; margin-left: 1px; flex-shrink: 0; }
+  .opsign { color: var(--accent2); font-size: 22px; flex-shrink: 0; }
+  .paren { color: var(--muted); font-size: 24px; font-weight: normal; flex-shrink: 0; }
+  .eqsign { margin-left: 2px; font-size: 22px; flex-shrink: 0; }
+  .targetVal { color: var(--success); font-size: 24px; margin-left: 2px; flex-shrink: 0; }
 
-  #topBar { display: flex; justify-content: space-between; width: 100%; max-width: 340px; font-size: 12px; color: var(--muted); margin: 2px 0; flex-shrink: 0; }
-  #scoreVal { color: var(--text); font-weight: bold; font-size: 15px; }
-  #nextRow {
-    display: flex; align-items: center; gap: 4px;
-    font-size: 9px; color: var(--muted); letter-spacing: 1px;
-    flex-shrink: 0;
-  }
-  .next-box {
-    width: 18px; height: 18px; border-radius: 5px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: bold;
-    background: #2a3142; color: var(--text);
-  }
-  #message { min-height: 16px; font-size: 12px; color: var(--accent2); margin-bottom: 2px; text-align: center; flex-shrink: 0; }
+  #message { min-height: 14px; font-size: 12px; color: var(--accent2); margin-bottom: 2px; text-align: center; flex-shrink: 0; }
 
   .board-area {
     flex: 1 1 auto;
@@ -196,24 +245,6 @@
   .block.flash-success { box-shadow: 0 0 0 4px var(--success), 0 0 18px var(--success) !important; }
   .block.flash-fail { box-shadow: 0 0 0 4px var(--fail), 0 0 18px var(--fail) !important; }
 
-  #gameTopRow {
-    display: flex; align-items: center; justify-content: space-between;
-    width: 100%; gap: 4px; flex-shrink: 0; margin: 6px 0;
-    flex-wrap: nowrap;
-  }
-  #miniControls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-  #rightCol { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; }
-  button.mini-btn {
-    width: auto; max-width: none; margin: 0;
-    padding: 8px 12px; font-size: 12px; border-radius: 8px;
-    background: var(--panel);
-  }
-  button.mini-btn.icon {
-    width: 34px; height: 34px; padding: 0;
-    border-radius: 50%; font-size: 15px;
-    display: flex; align-items: center; justify-content: center;
-  }
-
   #feedbackPop {
     position: fixed; top: 42%; left: 50%;
     transform: translate(-50%, -50%) scale(0.4);
@@ -242,7 +273,7 @@
     50% { opacity: 0.35; }
   }
 
-  /* ---------------- 確認モーダル（タイトルに戻りますか？等） ---------------- */
+  /* ---------------- 確認モーダル ---------------- */
   .confirm-modal {
     position: absolute;
     inset: 0;

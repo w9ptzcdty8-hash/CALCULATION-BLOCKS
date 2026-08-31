@@ -88,7 +88,6 @@
     const stageEl = document.getElementById("stage");
     const viewportEl = document.getElementById("viewport");
     if (!stageEl || !viewportEl) return;
-    // 広告エリア分を除いた、実際にゲームへ使える領域のサイズを基準にする
     const vw = viewportEl.clientWidth;
     const vh = viewportEl.clientHeight;
     const scale = Math.min(vw / STAGE_W, vh / STAGE_H);
@@ -121,14 +120,12 @@
     return b;
   }
 
-  // プレイ画面の数字ブロックと同じ配色をボタンに適用する
   function colorizeButton(btn, colorIndex) {
     const c = BLOCK_COLORS[colorIndex % 10];
     btn.style.background = c.bg;
     btn.style.color = c.fg;
   }
 
-  // ボタン押下時に点滅演出を挟んでから画面遷移などの処理を実行する
   function pressThen(btn, callback, delay = 500) {
     btn.disabled = true;
     btn.classList.add("btn-flash");
@@ -316,54 +313,63 @@
 
     const topBar = document.createElement("div");
     topBar.id = "topBar";
+
+    // 左側エリア：DIFFICULTY の下に SCORE
+    const leftCol = document.createElement("div");
+    leftCol.id = "leftCol";
     diffLabel = document.createElement("div");
     diffLabel.innerText = "DIFFICULTY: EASY";
     scoreVal = document.createElement("div");
     scoreVal.id = "scoreVal";
     scoreVal.innerText = "SCORE: 0";
-    topBar.appendChild(diffLabel);
-    topBar.appendChild(scoreVal);
+    leftCol.appendChild(diffLabel);
+    leftCol.appendChild(scoreVal);
 
-    const gameTopRow = document.createElement("div");
-    gameTopRow.id = "gameTopRow";
-
-    eqBar = document.createElement("div");
-    eqBar.id = "equationBar";
-
+    // 右側エリア：右上ポーズ、下にパス、NEXT表示
     const rightCol = document.createElement("div");
     rightCol.id = "rightCol";
 
-    const miniControls = document.createElement("div");
-    miniControls.id = "miniControls";
-    passButton = createButton("PASS", "mini-btn");
-    passButton.addEventListener("click", handlePass);
+    const btnRow = document.createElement("div");
+    btnRow.id = "topBtnRow";
+
     pauseButton = createButton("⏸", "mini-btn icon");
     pauseButton.setAttribute("aria-label", "PAUSE");
     pauseButton.addEventListener("click", () => {
       state.paused = true;
       showScreen("PAUSE");
     });
-    miniControls.appendChild(passButton);
-    miniControls.appendChild(pauseButton);
 
-    const nextRow = document.createElement("div");
-    nextRow.id = "nextRow";
+    passButton = createButton("PASS", "mini-btn");
+    passButton.addEventListener("click", handlePass);
+
+    btnRow.appendChild(pauseButton);
+    btnRow.appendChild(passButton);
+
+    const nextSection = document.createElement("div");
+    nextSection.id = "nextSection";
     const nextLabel = document.createElement("span");
     nextLabel.innerText = "NEXT";
-    nextRow.appendChild(nextLabel);
+    nextSection.appendChild(nextLabel);
+
+    const nextBoxRow = document.createElement("div");
+    nextBoxRow.id = "nextBoxRow";
     nextBoxes = [];
     for (let i = 0; i < 3; i++) {
       const box = document.createElement("div");
       box.className = "next-box";
-      nextRow.appendChild(box);
+      nextBoxRow.appendChild(box);
       nextBoxes.push(box);
     }
+    nextSection.appendChild(nextBoxRow);
 
-    rightCol.appendChild(miniControls);
-    rightCol.appendChild(nextRow);
+    rightCol.appendChild(btnRow);
+    rightCol.appendChild(nextSection);
 
-    gameTopRow.appendChild(eqBar);
-    gameTopRow.appendChild(rightCol);
+    topBar.appendChild(leftCol);
+    topBar.appendChild(rightCol);
+
+    eqBar = document.createElement("div");
+    eqBar.id = "equationBar";
 
     messageEl = document.createElement("div");
     messageEl.id = "message";
@@ -375,7 +381,7 @@
     boardWrap.appendChild(boardEl);
 
     gameScreen.appendChild(topBar);
-    gameScreen.appendChild(gameTopRow);
+    gameScreen.appendChild(eqBar);
     gameScreen.appendChild(messageEl);
     gameScreen.appendChild(boardWrap);
     root.appendChild(gameScreen);
@@ -755,7 +761,7 @@
     diffLabel.innerText = `DIFFICULTY: ${DIFFICULTY_LABELS[state.difficulty]}`;
     newRound();
     scoreVal.innerText = "SCORE: 0";
-    setMessage("ブロックを選んで□に入れよう");
+    setMessage("");
 
     showScreen("GAME");
     layoutBoard();
@@ -845,7 +851,7 @@
 
     let landed = false;
     const finishLanding = () => {
-      if (landed) return; // 二重実行防止（transitionendとフォールバックタイマーの競合対策）
+      if (landed) return;
       landed = true;
       el.removeEventListener("transitionend", onEnd);
       clearTimeout(fallbackTimer);
@@ -859,23 +865,14 @@
     };
 
     const onEnd = (e) => {
-      if (e.target !== el || e.propertyName !== "top") return; // top以外の誤発火を無視
+      if (e.target !== el || e.propertyName !== "top") return;
       finishLanding();
     };
     el.addEventListener("transitionend", onEnd);
 
-    // Android実機では、appendChild直後に1回のrequestAnimationFrameだけで
-    // top位置を変更すると、ブラウザが初期スタイルの描画を確定する前に
-    // 変更が上書きされ、transitionが発火しない（＝transitionendが永久に来ない）
-    // ことがある。これが起きると着地処理がされずPASSボタンが押せなくなったり
-    // ブロックが消えたりするバグにつながっていた。
-    // 対策1: appendChild直後に強制リフロー（offsetHeightの参照）を挟み、
-    //        開始位置のスタイルを確実に確定させてからtopを変更する。
     void el.offsetHeight;
     el.style.top = landingRow * cellSize + "px";
 
-    // 対策2: 万一それでもtransitionendが発火しない端末があった場合の保険として、
-    //        トランジション時間（0.32秒）+ 余裕を見て強制的に着地処理を実行する。
     const fallbackTimer = setTimeout(finishLanding, 500);
   }
 
@@ -892,7 +889,7 @@
     if (state.paused || !state.running || !passButton || passButton.disabled) return;
     state.passedLog.push(buildFormulaLabel(state.equationStructure, state.operatorSeq, state.target));
     newRound();
-    setMessage("演算が変わった！ブロックが降ってくる");
+    setMessage("演算が変わった！");
     passButton.disabled = true;
     for (let c = 0; c < COLS; c++) spawnBlock(c);
   }
@@ -973,14 +970,14 @@
         scoreVal.innerText = `SCORE: ${state.score}`;
         restartSpawnTimer();
         newRound();
-        setMessage(`せいかい！ ${exprText} = ${resultText}  (+10)`);
+        setMessage(`せいかい！ ${exprText} = ${resultText} (+10)`);
       } else {
         state.roundWrongCount++;
         if (state.roundWrongCount >= 3 && !state.roundMissLogged) {
           state.missedLog.push(buildFormulaLabel(structure, usedOps, state.target));
           state.roundMissLogged = true;
         }
-        setMessage(`ざんねん… ${exprText} = ${resultText}（目標: ${formatNum(state.target)}）`);
+        setMessage(`ざんねん… ${exprText} = ${resultText}`);
       }
       state.selection = [];
       renderEquation();
