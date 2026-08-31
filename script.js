@@ -892,7 +892,6 @@
     setMessage("パス！ブロックが追加されました");
     passButton.disabled = true;
 
-    // パス時: 全6列に1/2の確率で「？」ブロック生成して落下
     for (let c = 0; c < COLS; c++) {
       const val = Math.random() < 0.5 ? "?" : randomValue();
       spawnBlock(c, val);
@@ -932,7 +931,6 @@
   function onBlockClick(block, col, domEl) {
     if (state.paused || !state.running) return;
 
-    // 「？」ブロックは選択不可。小さく揺れて使えない演出
     if (block.value === "?") {
       domEl.classList.remove("shake-block");
       void domEl.offsetWidth;
@@ -989,11 +987,11 @@
           }
         });
 
-        // 正解ブロックの消去
+        // 1. 正解ブロックを配列から消去
         picks.forEach((p) => removeBlockById(p.id, p.col));
 
-        // 消去したブロックに上下左右で隣接する「？」ブロックを検索・変身
-        transformAdjacentQuestions(erasedCoords);
+        // 2. 接する「？」ブロックの対象IDと新数値を決定（データのみ）
+        const transformTargets = findAdjacentQuestionsToTransform(erasedCoords);
 
         state.score += 10;
         state.correctCount++;
@@ -1001,6 +999,14 @@
         restartSpawnTimer();
         newRound();
         setMessage(`せいかい！ ${exprText} = ${resultText} (+10)`);
+
+        state.selection = [];
+        renderEquation();
+
+        // 3. 上のブロックが落下して位置が確定（renderLanded）した後に白発光演出を実行
+        renderLanded();
+        triggerQuestionTransformEffects(transformTargets);
+
       } else {
         state.roundWrongCount++;
         if (state.roundWrongCount >= 3 && !state.roundMissLogged) {
@@ -1009,20 +1015,19 @@
         }
         setMessage(`ざんねん… ${exprText} = ${resultText}`);
 
-        // 誤回答時: ランダムな3列に1/2の確率で「？」ブロック生成して落下
         const colsToSpawn = pickRandomCols(3);
         colsToSpawn.forEach((c) => {
           const val = Math.random() < 0.5 ? "?" : randomValue();
           spawnBlock(c, val);
         });
+
+        state.selection = [];
+        renderEquation();
+        renderLanded();
       }
-      state.selection = [];
-      renderEquation();
-      renderLanded();
     }, 320);
   }
 
-  // 0〜COLS-1 から重複なしで n 個の列番号を選択
   function pickRandomCols(n) {
     const list = [];
     for (let i = 0; i < COLS; i++) list.push(i);
@@ -1033,8 +1038,8 @@
     return list.slice(0, n);
   }
 
-  // 接する「？」ブロックの数字変換処理
-  function transformAdjacentQuestions(erasedCoords) {
+  // 接する「？」ブロックのID取得および値の確定
+  function findAdjacentQuestionsToTransform(erasedCoords) {
     const adjacentQuestionIds = new Set();
     const dirs = [
       { dCol: 0, dRow: 1 },
@@ -1059,19 +1064,46 @@
       });
     });
 
+    const targets = [];
     adjacentQuestionIds.forEach((id) => {
       for (let c = 0; c < COLS; c++) {
         const stack = state.columns[c];
         const target = stack.find((b) => b.id === id);
         if (target) {
-          target.value = randomValue();
-          // 白く光るエフェクト演出
-          const domEl = boardEl.querySelector(`.block[data-id="${id}"]`);
-          if (domEl) {
-            domEl.classList.add("flash-transform");
-          }
+          const newVal = randomValue();
+          target.value = newVal;
+          targets.push({ id, newVal });
           break;
         }
+      }
+    });
+    return targets;
+  }
+
+  // 落下完了後に発行する0.5秒の「パーッと白く光って開眼する」視覚エフェクト
+  function triggerQuestionTransformEffects(targets) {
+    if (!targets || targets.length === 0) return;
+
+    targets.forEach(({ id, newVal }) => {
+      const domEl = boardEl.querySelector(`.block[data-id="${id}"]`);
+      if (domEl) {
+        domEl.classList.add("flash-transform");
+
+        // 0.25秒（発光ピーク時）にテキストと色を「？」から新しい数字に書き換え
+        setTimeout(() => {
+          domEl.innerText = newVal;
+          domEl.classList.remove("question-block");
+          const colors = BLOCK_COLORS[newVal];
+          if (colors) {
+            domEl.style.background = colors.bg;
+            domEl.style.color = colors.fg;
+          }
+        }, 250);
+
+        // 0.5秒後（アニメーション完了時）にクラスを削除
+        setTimeout(() => {
+          domEl.classList.remove("flash-transform");
+        }, 500);
       }
     });
   }
@@ -1116,7 +1148,6 @@
     showScreen("RESULT");
   }
 
-  // メッセージ表示（3秒後に自動消去）
   function setMessage(text) {
     if (state.messageTimer) clearTimeout(state.messageTimer);
     messageEl.innerText = text;

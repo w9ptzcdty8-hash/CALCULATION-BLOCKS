@@ -114,7 +114,6 @@
 
   .screen { display: none; flex-direction: column; align-items: center; width: 100%; height: 100%; }
 
-  /* ---------------- トップバー ---------------- */
   #topBar {
     display: flex;
     justify-content: space-between;
@@ -141,7 +140,6 @@
     flex-shrink: 0;
   }
 
-  /* ---------------- 数式行（数式エリア ＋ PASSボタン） ---------------- */
   #eqRow {
     display: flex;
     align-items: stretch;
@@ -188,7 +186,6 @@
     flex-shrink: 0;
   }
 
-  /* ---------------- サブバー（メッセージ＆NEXT表示） ---------------- */
   #subBar {
     display: flex;
     justify-content: space-between;
@@ -243,7 +240,7 @@
     border-radius: 7px;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
     user-select: none;
-    transition: top .32s cubic-bezier(.3,.7,.4,1), box-shadow .15s ease, transform .15s ease, background .2s ease;
+    transition: top .32s cubic-bezier(.3,.7,.4,1), box-shadow .15s ease, transform .15s ease;
   }
   .block.landed { cursor: pointer; }
   .block.selected {
@@ -253,7 +250,7 @@
   .block.flash-success { box-shadow: 0 0 0 4px var(--success), 0 0 18px var(--success) !important; }
   .block.flash-fail { box-shadow: 0 0 0 4px var(--fail), 0 0 18px var(--fail) !important; }
 
-  /* 「？」ブロックタップ時の「使えない感」アニメーション（小さな震え） */
+  /* 「？」ブロックの小振動 */
   .block.shake-block {
     animation: blockShake 0.25s ease-in-out;
   }
@@ -265,14 +262,29 @@
     80% { transform: translateX(2px); }
   }
 
-  /* 「？」ブロック変化時の白発光アニメーション */
+  /* 0.5秒の「パーッと強烈に白く光って変身する」エフェクト */
   .block.flash-transform {
-    animation: flashTransform 0.5s ease;
+    animation: flashTransform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    z-index: 10;
   }
   @keyframes flashTransform {
-    0% { filter: brightness(1); }
-    50% { filter: brightness(3) drop-shadow(0 0 8px #fff); transform: scale(1.15); }
-    100% { filter: brightness(1); transform: scale(1); }
+    0% {
+      filter: brightness(1);
+      box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+      transform: scale(1);
+    }
+    50% {
+      background: #ffffff !important;
+      color: #ffffff !important;
+      filter: brightness(3);
+      box-shadow: 0 0 25px 12px rgba(255, 255, 255, 0.9);
+      transform: scale(1.25);
+    }
+    100% {
+      filter: brightness(1);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+      transform: scale(1);
+    }
   }
 
   #feedbackPop {
@@ -294,7 +306,6 @@
     100% { opacity: 0; transform: translate(-50%,-50%) scale(0.85); }
   }
 
-  /* ---------------- ボタン押下の点滅演出 ---------------- */
   button.btn-flash {
     animation: btnFlash 0.2s ease-in-out infinite;
   }
@@ -303,7 +314,6 @@
     50% { opacity: 0.35; }
   }
 
-  /* ---------------- 確認モーダル ---------------- */
   .confirm-modal {
     position: absolute;
     inset: 0;
